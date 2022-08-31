@@ -1,48 +1,82 @@
 # DotNet / CSharp Starter project for Amazon DocumentDB
 
 ## Introduction
-Welcome to this MongoDB and ASP.Net Core Web API sample project. 
-The aim of this project is to give you a working example of how you can use the power of MongoDB Atlas and .NET to create modern applications.
-This project is intended to be a companion project to the article [How to use MongoDB Atlas with .NET/.NET Core](https://www.mongodb.com/languages/how-to-use-mongodb-with-dotnet) from the MongoDB website.
+Setting up development enviornment for a new database may require going through countless tutorials and documentation pages. This is an example DotNet project that sets up development enviroment locally to work with Amazon DocumentDB. Project creates all required infrastucture, networkfing and resources to get started on your first WebAPI project using Csharp. This example has been been modified from [TodoApis Tutorial](https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-web-api?view=aspnetcore-6.0&tabs=visual-studio) from Microsoft. Example uses ssh tunnel to work locally with Amazon DocumentDB and also uses AWS Secrets Manager to store database credentials. Follow the steps below to finish the installation. 
 
-## Requirements 
-1. DotNet Core 6.0+
-2. Amazon DocumentDB 
-3. AWS CLI 2.4+
-4. Make commandline tools.  MacOs[https://formulae.brew.sh/formula/make], Windows [https://linuxhint.com/install-use-make-windows/] 
-
-
-## Getting Started
+## Feature List at High Level
+1. Orchestration through cloudformation template for VPC, Gateways, Amazon DocumentDB and EC2 jump server. 
+2. DotNet Sample Web API project.
+3. SecretsManager Integration for secured access to database credentials. 
+4. EC2 Jump server to connect to database as Amazon DocumentDB is a VPC only service. 
 
 ![Architecture](./images/dotnet-docdb-starter-project.png)
 
-### Setting up dev
+## Requirements 
+1. DotNet Core 6.0+ Installed
+2. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) 2.4+  You must have run aws configure to set up your terminal for the AWS account and region of your choice.
+3. Make commandline tools.  MacOs(https://formulae.brew.sh/formula/make), Windows (https://linuxhint.com/install-use-make-windows/) 
+4. Amazon DocumentDB [Mongo shell commands](https://docs.aws.amazon.com/documentdb/latest/developerguide/get-started-guide.html#cloud9-mongoshell). 
 
-## Data Import 
 
-Use at your own risk; not a supported MongoDB product 
+## Getting Started
+Follow the following steps to setup environment locally
 
-```
-mongoimport --file=restaurants.json --db=restaurants --collection=locations
-mongoimport --tlsInsecure --ssl --sslCAFile rds-combined-ca-bundle.pem --username docdb --password docdb123 --file=data/restaurant.json --db=restaurants --collection=locations --writeConcern "{w:0}"
-```
 
-```
-mongosh --tlsAllowInvalidHostnames --tls --tlsCAFile rds-combined-ca-bundle.pem --username docdb --password docdb123
-mongosh --tlsAllowInvalidHostnames --tls --tlsCAFile rds-combined-ca-bundle.pem --username docdb --password docdb123
-
-```
-### Setup 
+### Step 1 : Clone DotNet Starter project locally
+Clone this project using following command: 
 
 ```
-export ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
-export AWS_REGION=$(aws configure get region)
-
-cdk bootstrap aws://$ACCOUNT_ID/$AWS_REGION
+git clone https://github.com/aws-samples/docdb-dotnet-starter
+cd docdb-dotnet-starter
 ```
 
+### Step 2 : Create EC2 Key pair 
+Use the following commands to create key pair and save that to the project. If you decide to change the key name then note it down. We will need to make changes to commands accordingly. 
+```
+mkdir keys
+aws ec2 create-key-pair --key-name ec2-keypair --query 'KeyMaterial' --output text > keys/ec2-keypair.pem
+chmod 400 keys/ec2-keypair.pem
+```
+
+### Step 3 : Deploy cloudformation template to setup infrastructure
 
 ```
-aws ec2 create-key-pair --key-name ec2-keypair --query 'KeyMaterial' --output text > ec2-keypair.pem
-chmod 400 ec2-keypair.pem
+make infra
+```
+Above will take about 15 mins to setup all the resources and permissions. You can check the progress of the CloudFormation [here](https://console.aws.amazon.com/cloudformation/home) and once complete you will see `'CREATE_COMPLETE'` message on CloudFormation Dashboard. 
+
+### Step 4 : Start SSH Tunnel 
+```
+make tunnel
+```
+### Step 5 : Build your project and Webapplication 
+This command may be needed to run in a separate terminical/command promt. 
+```
+dotnet build
+dotnet run
+```
+
+### Step 6 : Verity Web Apis 
+Commands at Step 4 shows the address and port where Web Aplis are running. Open your favorite browser and start the following page. 
+```
+https://localhost:5001/api/Locations
+```
+This should return empty results right now as there is no data loaded to DocumentDB Yet. Lets take care of that in following steps. 
+
+### Step 7 : Load data to Amazon DocumentDB
+This uses Restaurants.json file that comes with this project in the `data` directory. Use the following command to load to Amazon DocumentDB. 
+```
+mongoimport --username docdb --password docdb123 --file=data/restaurant.json --db=restaurants --collection=locations --writeConcern "{w:0}"
+```
+
+### Step 8 : Verify Data
+Go back to your browser and refresh, you should now see list of restaurant locations coming back as a result set. 
+```
+https://localhost:5001/api/Locations
+```
+
+### Verify Data in Amazon DocumentDB(Optional)
+You can also connect to Amazon DocumentDB directly to verify data using mongo shell. Use following commands to verify:
+```
+mongosh --username docdb --password docdb123
 ```
