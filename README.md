@@ -1,20 +1,21 @@
 # DotNet / CSharp Starter project for Amazon DocumentDB
 
 ## Introduction
-Setting up development enviornment for a new database may require going through countless tutorials and documentation pages. This is an example DotNet project that sets up development enviroment locally to work with Amazon DocumentDB. Project creates all required infrastucture, networkfing and resources to get started on your first WebAPI project using Csharp. This example has been been modified from [TodoApis Tutorial](https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-web-api?view=aspnetcore-6.0&tabs=visual-studio) from Microsoft. Example uses ssh tunnel to work locally with Amazon DocumentDB and also uses AWS Secrets Manager to store database credentials. Follow the steps below to finish the installation. 
+Setting up development environment for a new database may require going through countless tutorials and documentation pages. This is an example DotNet project that sets up development environment locally to work with Amazon DocumentDB. Project creates all required infrastructure, networking and resources to get started on your first WebAPI project using Csharp. This example has been been modified from [TodoApis Tutorial](https://docs.microsoft.com/en-us/aspnet/core/tutorials/first-web-api?view=aspnetcore-6.0&tabs=visual-studio) from Microsoft. Example uses ssh tunnel to work locally with Amazon DocumentDB and also uses AWS Secrets Manager to store database credentials. Follow the steps below to finish the installation. 
+
 
 ## Feature List at High Level
 1. Orchestration through cloudformation template for VPC, Gateways, Amazon DocumentDB and EC2 jump server. 
-2. DotNet Sample Web API project.
-3. SecretsManager Integration for secured access to database credentials. 
+2. DotNet Sample Web API project for basic CRUD operations. 
+3. SecretsManager Integration for secured access to database credentials and Secrets caching at app layer. 
 4. EC2 Jump server to connect to database as Amazon DocumentDB is a VPC only service. 
 
 ![Architecture](./images/dotnet-docdb-starter-project.png)
 
 ## Requirements 
 1. DotNet Core 6.0+ Installed
-2. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) 2.4+  You must have run aws configure to set up your terminal for the AWS account and region of your choice.
-3. Make commandline tools.  MacOs(https://formulae.brew.sh/formula/make), Windows (https://linuxhint.com/install-use-make-windows/) 
+2. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html) 2.4+  You must have run `aws configure` to set up your terminal for the AWS account and region of your choice.
+3. Make command line tools.  [MacOs](https://formulae.brew.sh/formula/make), [Windows](https://linuxhint.com/install-use-make-windows/) 
 4. Amazon DocumentDB [Mongo shell commands](https://docs.aws.amazon.com/documentdb/latest/developerguide/get-started-guide.html#cloud9-mongoshell). 
 
 
@@ -26,7 +27,7 @@ Follow the following steps to setup environment locally
 Clone this project using following command: 
 
 ```
-git clone https://github.com/aws-samples/docdb-dotnet-starter
+git clone https://github.com/rawalpuneet/docdb-dotnet-starter
 cd docdb-dotnet-starter
 ```
 
@@ -50,14 +51,14 @@ Above will take about 15 mins to setup all the resources and permissions. You ca
 make tunnel
 ```
 ### Step 5 : Build your project and Webapplication 
-This command may be needed to run in a separate terminical/command promt. 
+This command may be needed to run in a separate terminal/command prompt. 
 ```
 dotnet build
 dotnet run
 ```
 
 ### Step 6 : Verity Web Apis 
-Commands at Step 4 shows the address and port where Web Aplis are running. Open your favorite browser and start the following page. 
+Commands at Step 4 shows the address and port where Web Apis are running. Open your favorite browser and start the following page. 
 ```
 https://localhost:5001/api/Locations
 ```
@@ -66,7 +67,7 @@ This should return empty results right now as there is no data loaded to Documen
 ### Step 7 : Load data to Amazon DocumentDB
 This uses Restaurants.json file that comes with this project in the `data` directory. Use the following command to load to Amazon DocumentDB. 
 ```
-mongoimport --username docdb --password docdb123 --file=data/restaurant.json --db=restaurants --collection=locations --writeConcern "{w:0}"
+mongoimport --username docdb --password --file=data/restaurant.json --db=restaurants --collection=locations"
 ```
 
 ### Step 8 : Verify Data
@@ -78,5 +79,5 @@ https://localhost:5001/api/Locations
 ### Verify Data in Amazon DocumentDB(Optional)
 You can also connect to Amazon DocumentDB directly to verify data using mongo shell. Use following commands to verify:
 ```
-mongosh --username docdb --password docdb123
+mongosh --username docdb --password
 ```

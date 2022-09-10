@@ -1,3 +1,18 @@
+/*
+  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+  Licensed under the Apache License, Version 2.0 (the "License").
+  You may not use this file except in compliance with the License.
+  A copy of the License is located at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  or in the "license" file accompanying this file. This file is distributed
+  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+  express or implied. See the License for the specific language governing
+  permissions and limitations under the License.
+*/
+using System;
 using docdb_dotnet_starter.Models;
 using docdb_dotnet_starter.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -17,8 +32,12 @@ namespace docdb_dotnet_starter.Controllers
         }
 
         [HttpGet]
-        public ActionResult<List<Location>> Get() =>
-            _locationService.Get();
+        public ActionResult<List<Location>> Get(int pageLength)
+        {
+            var locations = _locationService.Get(pageLength);            
+            return locations;
+        }
+            
 
         [HttpGet("{id:length(24)}", Name = "GetLocation")]
         public ActionResult<Location> Get(string id)

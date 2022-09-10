@@ -1,7 +1,16 @@
-# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# SPDX-License-Identifier: MIT-0
+#  Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
----
+#  Licensed under the Apache License, Version 2.0 (the "License").
+#  You may not use this file except in compliance with the License.
+#  A copy of the License is located at
+
+#      http://www.apache.org/licenses/LICENSE-2.0
+
+#  or in the "license" file accompanying this file. This file is distributed
+#  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+#  express or implied. See the License for the specific language governing
+#  permissions and limitations under the License.
+
 AWSTemplateFormatVersion: "2010-09-09"
 Description: This stack deploys the infrastructure used in the blog post, "Using Amazon SageMaker to Query and Write into Amazon DocumentDB".
 
@@ -222,7 +231,16 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${AWS::StackName}-SG-DocumentDB
-
+  
+  DocDBParameterGroup:
+    Type: "AWS::DocDB::DBClusterParameterGroup"
+    Properties:
+      Description: "description"
+      Family: "docdb4.0"
+      Name: "DotNetParamGroup"
+      Parameters:
+            tls: "disabled"
+  
   DocumentDBCluster:  
     Type: AWS::DocDB::DBCluster
     Properties: 
@@ -230,6 +248,7 @@ Resources:
       MasterUsername: !Ref DocDBUsername
       MasterUserPassword: !Ref DocDBPassword
       DBSubnetGroupName : !Ref DocumentDBSubnetGroup
+      DBClusterParameterGroupName: !Ref DocDBParameterGroup
       StorageEncrypted: yes
       Tags: 
         - Key: Name
@@ -285,7 +304,21 @@ Resources:
       SecretId: !Ref DocDBSecret
       TargetId: !Ref DocumentDBCluster
       TargetType: AWS::DocDB::DBCluster
-
+      
+  DocumentDBSecretPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${AWS::StackName}-DocumentDBSecretPolicy
+      Roles: 
+        - !Ref Ec2Role
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - 
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource: !Ref DocDBSecret
 # Ec2 Role
   Ec2Role:
     Type: AWS::IAM::Role
@@ -305,21 +338,6 @@ Resources:
       Tags: 
         - Key: Name
           Value: !Sub ${AWS::StackName}-Ec2Role
-
-  DocumentDBSecretPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: !Sub ${AWS::StackName}-DocumentDBSecretPolicy
-      Roles: 
-        - !Ref Ec2Role
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - 
-            Effect: Allow
-            Action:
-              - secretsmanager:GetSecretValue
-            Resource: !Ref DocDBSecret
 
   Ec2Instance:
     Type: AWS::EC2::Instance
